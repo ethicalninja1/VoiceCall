@@ -1,0 +1,33 @@
+# Render Blueprint — one-click deploy:  Render dashboard → New → Blueprint → pick this repo.
+# NOTE: a persistent disk (needed for accounts, chats, photos) requires a paid instance (Starter or higher).
+services:
+  - type: web
+    name: voicecall
+    runtime: node
+    plan: starter                 # free plan sleeps after 15 min and has no disk — calls would not ring
+    region: singapore             # closest to India; change if your users are elsewhere
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: voicecall-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_NO_WARNINGS
+        value: "1"
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD       # generated for you — read it in the dashboard: voicecall → Environment
+        generateValue: true
+      - key: DEFAULT_COUNTRY_CODE
+        value: "91"
+      # Optional (add in the dashboard when you need them — see .env.example):
+      #   TURN_URL / TURN_USER / TURN_PASS   or   CF_TURN_KEY_ID / CF_TURN_API_TOKEN   (calls on strict networks)
+      #   SMTP_URL, SMS_WEBHOOK_URL                                                     (OTP verification codes)
+      #   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID                                          (admin alerts)

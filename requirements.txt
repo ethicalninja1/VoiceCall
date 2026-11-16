@@ -1,0 +1,10 @@
+# Node.js project: install with `npm install` (reads package.json). Reference only.
+node>=22.13          # uses the built-in SQLite (node:sqlite)
+npm>=10
+express@^4.19.2
+ws@^8.18.0
+compression@^1.7.4
+web-push@^3.6.7
+nodemailer@^6.9.14   # optional: email verification codes
+# Termux: pkg install nodejs cloudflared
+# Phones: Android 8+ / Chrome 90+ over HTTPS
