@@ -1,0 +1,21 @@
+{
+  "name": "voicecall",
+  "version": "4.0.0",
+  "description": "VoiceCall - accounts, DP, direct chat, HD voice/video calls, push, and a secure admin console",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "admin-password": "node admin-password.js"
+  },
+  "engines": { "node": ">=22.13" },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "web-push": "^3.6.7",
+    "ws": "^8.18.0"
+  },
+  "optionalDependencies": {
+    "nodemailer": "^6.9.14"
+  }
+}
