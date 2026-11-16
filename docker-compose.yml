@@ -1,0 +1,20 @@
+# One-command deploy:  docker compose up -d --build
+# Put HTTPS in front of port 3000 (Caddy / Nginx / Cloudflare Tunnel). Calls need HTTPS.
+services:
+  voicecall:
+    build: .
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    env_file: [.env]
+    environment:
+      TURN_URL: "turn:${TURN_HOST:-localhost}:3478"
+      TURN_USER: "${TURN_USER:-voicecall}"
+      TURN_PASS: "${TURN_PASS:-change-me}"
+    volumes: ["voicecall-data:/data"]
+  coturn:                       # your own TURN relay so calls connect on every network
+    image: coturn/coturn:latest
+    restart: unless-stopped
+    network_mode: host          # needs UDP 3478 and 49152-49252 open in your firewall
+    volumes: ["./docker/turnserver.conf:/etc/coturn/turnserver.conf:ro"]
+volumes:
+  voicecall-data:
