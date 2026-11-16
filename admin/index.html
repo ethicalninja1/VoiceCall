@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark light">
+<title>VoiceCall Admin</title>
+<link rel="icon" href="/admin/assets/icon.png">
+<link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body>
+
+<main id="login" class="login hidden">
+  <form id="loginForm" class="logincard" autocomplete="on">
+    <img src="/admin/assets/icon.png" alt="" class="loginlogo">
+    <h1>VoiceCall Admin</h1>
+    <p class="muted">Sign in to manage accounts, calls and security.</p>
+    <label for="lgUser">Username</label>
+    <input id="lgUser" name="username" class="input" autocomplete="username" value="admin" required>
+    <label for="lgPass">Password</label>
+    <input id="lgPass" name="password" type="password" class="input" autocomplete="current-password" required autofocus>
+    <div id="lgCodeWrap" class="hidden"><label for="lgCode">Authenticator code</label><input id="lgCode" class="input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code"></div>
+    <button id="lgBtn" class="btn primary block" type="submit">Sign in</button>
+    <div id="lgErr" class="formerr" role="alert"></div>
+    <p class="fine">🔒 Protected area. Failed attempts are logged and temporarily lock sign-in.</p>
+  </form>
+</main>
+
+<div id="app" class="app hidden">
+  <aside id="side" class="side">
+    <div class="brand"><img src="/admin/assets/icon.png" alt=""><div><b>VoiceCall</b><small>Admin console</small></div></div>
+    <nav class="nav">
+      <button class="navbtn on" data-view="overview"><i data-i="home"></i>Overview</button>
+      <button class="navbtn" data-view="users"><i data-i="users"></i>Accounts <em id="navUsers" class="count">0</em></button>
+      <button class="navbtn" data-view="signins"><i data-i="key"></i>Sign-ins</button>
+      <button class="navbtn" data-view="map"><i data-i="pin"></i>Live map</button>
+      <button class="navbtn" data-view="calls"><i data-i="phone"></i>Calls <em id="navCalls" class="count hidden">0</em></button>
+      <button class="navbtn" data-view="reports"><i data-i="flag"></i>Reports <em id="navReports" class="count hidden">0</em></button>
+      <button class="navbtn" data-view="events"><i data-i="activity"></i>Activity</button>
+      <button class="navbtn" data-view="tools"><i data-i="tool"></i>Tools &amp; security</button>
+    </nav>
+    <div class="sidefoot"><button id="themeBtn" class="navbtn"><i data-i="moon"></i>Toggle theme</button><button id="logoutBtn" class="navbtn"><i data-i="logout"></i>Sign out</button></div>
+  </aside>
+  <div id="scrim" class="scrim hidden"></div>
+
+  <div class="main">
+    <header class="top">
+      <button id="menuBtn" class="iconbtn menu" aria-label="Menu"><i data-i="menu"></i></button>
+      <h2 id="viewTitle">Overview</h2>
+      <div class="live" id="live"><span class="pulse"></span><span id="liveTxt">Live</span></div>
+    </header>
+
+    <section id="v-overview" class="view">
+      <div id="stats" class="stats"></div>
+      <div class="grid2">
+        <div class="panel"><div class="phead"><h3>Online activity</h3><small class="muted">Last 3 hours</small></div><div id="spark" class="spark"></div></div>
+        <div class="panel"><div class="phead"><h3>Top countries</h3><small class="muted">by IP location</small></div><div id="countries" class="bars"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><div class="phead"><h3>Online now</h3><button class="link" data-goto="users">View all</button></div><div id="onlineList" class="mini"></div></div>
+        <div class="panel"><div class="phead"><h3>Recent activity</h3><button class="link" data-goto="events">View all</button></div><div id="recentEvents" class="mini"></div></div>
+      </div>
+    </section>
+
+    <section id="v-users" class="view hidden">
+      <div class="toolbar">
+        <div class="search"><i data-i="search"></i><input id="uq" class="input" placeholder="Search name, ID, email, mobile, IP, city, device…" autocomplete="off"></div>
+        <select id="usort" class="input sel"><option value="last">Sort: Last seen</option><option value="name">Sort: Name</option><option value="id">Sort: ID</option><option value="first">Sort: Newest</option></select>
+        <a id="exportBtn" class="btn" href="/admin/api/export.csv"><i data-i="download"></i>Export CSV</a>
+      </div>
+      <div id="chips" class="chips"></div>
+      <div class="panel flush">
+        <div class="tablewrap"><table class="table" id="utable">
+          <thead><tr><th>Account</th><th>ID</th><th>Email / Mobile</th><th>IP address</th><th>Location</th><th>Device</th><th>Status</th><th>Last seen</th></tr></thead>
+          <tbody id="ubody"></tbody>
+        </table></div>
+        <div id="uempty" class="empty hidden">No accounts match your filters.</div>
+      </div>
+    </section>
+
+    <section id="v-signins" class="view hidden">
+      <div class="toolbar"><div class="search"><i data-i="search"></i><input id="sq" class="input" placeholder="Filter by name, email, mobile, IP…" autocomplete="off"></div></div>
+      <div class="panel flush"><div class="tablewrap"><table class="table static"><thead><tr><th>Time</th><th>Account</th><th>Email / Mobile</th><th>Method</th><th>Result</th><th>IP address</th><th>Location</th><th>Device</th></tr></thead><tbody id="signBody"></tbody></table></div><div id="sempty" class="empty hidden">No sign-ins yet.</div></div>
+    </section>
+
+    <section id="v-map" class="view hidden">
+      <div class="panel flush">
+        <div class="phead pad"><h3>Where users are</h3><div class="maptools"><span class="legend"><i class="lg on"></i> online <i class="lg off"></i> offline <i class="lg gps"></i> GPS <i class="lg ip"></i> IP-based</span><button id="zoomOut" class="iconbtn sm" aria-label="Zoom out">−</button><button id="zoomIn" class="iconbtn sm" aria-label="Zoom in">+</button></div></div>
+        <div id="mapBox" class="mapbox"></div>
+        <div class="fine pad">Map © OpenStreetMap contributors. Pins use GPS when the user shared it, otherwise the approximate IP location.</div>
+      </div>
+    </section>
+
+    <section id="v-calls" class="view hidden">
+      <div class="panel"><div class="phead"><h3>Active calls</h3></div><div class="tablewrap"><table class="table static"><thead><tr><th>Caller</th><th>Callee</th><th>Type</th><th>State</th><th>Duration</th></tr></thead><tbody id="activeBody"></tbody></table></div><div id="aempty" class="empty hidden">No active calls right now.</div></div>
+      <div class="panel flush"><div class="phead pad"><h3>Call history</h3><small class="muted">Last 150</small></div><div class="tablewrap"><table class="table static"><thead><tr><th>Time</th><th>Caller</th><th>Callee</th><th>Type</th><th>Result</th><th>Duration</th></tr></thead><tbody id="histBody"></tbody></table></div><div id="hempty" class="empty hidden">No calls yet.</div></div>
+    </section>
+
+    <section id="v-reports" class="view hidden">
+      <div class="panel flush"><div class="tablewrap"><table class="table static"><thead><tr><th>Time</th><th>Reported user</th><th>Reported by</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody id="repBody"></tbody></table></div><div id="rempty" class="empty hidden">No reports. 🎉</div></div>
+    </section>
+
+    <section id="v-events" class="view hidden">
+      <div class="toolbar"><div class="search"><i data-i="search"></i><input id="eq" class="input" placeholder="Filter activity…" autocomplete="off"></div></div>
+      <div class="panel flush"><div id="eventList" class="events"></div><div id="eempty" class="empty hidden">No activity yet.</div></div>
+    </section>
+
+    <section id="v-tools" class="view hidden">
+      <div class="grid2">
+        <div class="panel"><div class="phead"><h3>Broadcast message</h3></div>
+          <p class="muted small">Shows a banner to every user who is online right now.</p>
+          <textarea id="bcText" class="input" rows="3" maxlength="240" placeholder="e.g. Maintenance at 10 PM"></textarea>
+          <button id="bcBtn" class="btn primary">Send broadcast</button>
+        </div>
+        <div class="panel"><div class="phead"><h3>Change admin password</h3></div>
+          <label for="pwCur">Current password</label><input id="pwCur" type="password" class="input" autocomplete="current-password">
+          <label for="pwNew">New password (min 10 characters)</label><input id="pwNew" type="password" class="input" autocomplete="new-password">
+          <button id="pwBtn" class="btn primary">Update password</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><div class="phead"><h3>Two-factor authentication</h3><span id="tfTag" class="tag">Off</span></div>
+          <p class="muted small">Require a 6-digit code from an authenticator app (Google Authenticator, Authy…) when signing in to this console.</p>
+          <div id="tfBody"></div>
+        </div>
+        <div class="panel"><div class="phead"><h3>Backup &amp; maintenance</h3></div>
+          <p class="muted small">Creates a consistent database backup in <code>data/backups</code> (last 7 kept) and removes old events. Runs automatically every 24 h.</p>
+          <button id="bkBtn" class="btn primary">Back up now</button>
+        </div>
+      </div>
+      <div class="panel"><div class="phead"><h3>Server</h3></div><dl id="serverInfo" class="kv"></dl></div>
+      <div class="panel"><div class="phead"><h3>Privacy &amp; data handling</h3></div>
+        <ul class="notes">
+          <li>Users agree on sign-up that the admin can see their name, ID, email/mobile, IP address, device and approximate location.</li>
+          <li>Precise GPS is shared only if the user allowed the browser permission, and can be switched off by the user at any time.</li>
+          <li>Passwords are stored as salted scrypt hashes — nobody can read them. Chat text is stored on the server so messages reach offline users; this console never shows message content.</li>
+          <li>Calls, video and in-call chat are peer-to-peer. Users can delete their account; you can export or delete any record.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>
+
+<aside id="drawer" class="drawer hidden" aria-label="Account details">
+  <div class="dhead"><div id="dAva" class="ava lg">?</div><div class="dtitle"><b id="dName">—</b><small id="dSub" class="muted"></small></div><button id="dClose" class="iconbtn" aria-label="Close"><i data-i="x"></i></button></div>
+  <div id="dBody" class="dbody"></div>
+</aside>
+<div id="dScrim" class="scrim hidden"></div>
+
+<div id="modal" class="modal hidden"><form id="mForm" class="mcard"><h3 id="mTitle"></h3><p id="mText" class="muted small"></p><div id="mFields"></div><div class="mbtns"><button type="button" id="mCancel" class="btn">Cancel</button><button type="submit" id="mOk" class="btn primary">OK</button></div></form></div>
+<div id="toast" class="toast"></div>
+<script src="/admin/assets/admin.js"></script>
+</body>
+</html>

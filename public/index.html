@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<title>VoiceCall</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ Sign in / Create account ============ -->
+<div id="auth" class="screen hidden">
+  <div class="authcard">
+    <div class="logo">📞</div>
+    <h1>VoiceCall</h1>
+    <p class="muted center">HD calls, chat and more — your ID stays with you on every device.</p>
+
+    <div id="auPane">
+      <div class="seg"><button id="auTabIn" class="on">Sign in</button><button id="auTabUp">Create account</button></div>
+      <label for="auId">Email or mobile number</label>
+      <input id="auId" class="field" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="you@example.com or 98765 43210">
+      <div id="auNameWrap" class="hidden">
+        <label for="auName">Your name (must be unique)</label>
+        <input id="auName" class="field" maxlength="24" autocomplete="nickname" placeholder="e.g. Asha Kumar">
+        <div id="auNameMsg" class="namemsg">&nbsp;</div>
+      </div>
+      <label for="auPw">Password</label>
+      <div class="pwrow"><input id="auPw" type="password" class="field" autocomplete="current-password" placeholder="At least 8 characters"><button id="auEye" type="button" class="eye" aria-label="Show password">👁</button></div>
+      <div id="auConsentWrap" class="hidden">
+        <div class="privacy"><b>🔒 Privacy notice</b>
+          <p>To keep the service safe, the administrator can see your <b>name, ID, email / mobile number, IP address, device and approximate location</b>, and whether you are online. If you allow it, your <b>precise GPS location</b> is shared too.</p>
+          <p>Calls, video and in-call chat are private (peer-to-peer). Direct chat messages are stored on the server so they reach you when you are offline; the administrator console never shows message content. You can delete your account any time.</p>
+        </div>
+        <label class="check"><input type="checkbox" id="auConsent"><span>I understand and agree</span></label>
+      </div>
+      <button id="auGo" class="primary">Sign in</button>
+      <button id="auForgot" class="linkbtn wide">Forgot password?</button>
+      <div id="auMsg" class="formmsg" role="alert"></div>
+    </div>
+
+    <div id="auOtp" class="hidden">
+      <h2>Verify it's you</h2>
+      <p id="auOtpText" class="muted"></p>
+      <input id="auCode" class="field code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code">
+      <button id="auVerify" class="primary">Verify &amp; continue</button>
+      <button id="auResend" class="linkbtn wide">Resend code</button>
+      <button id="auOtpBack" class="linkbtn wide">Back</button>
+      <div id="auOtpMsg" class="formmsg" role="alert"></div>
+    </div>
+
+    <div id="auReset" class="hidden">
+      <h2>Reset password</h2>
+      <p id="auResetText" class="muted"></p>
+      <input id="auRsCode" class="field code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code">
+      <label for="auRsPw">New password</label>
+      <input id="auRsPw" type="password" class="field" autocomplete="new-password" placeholder="At least 8 characters">
+      <button id="auRsGo" class="primary">Update password</button>
+      <button id="auRsBack" class="linkbtn wide">Back</button>
+      <div id="auRsMsg" class="formmsg" role="alert"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ One-time permissions ============ -->
+<div id="perms" class="screen hidden">
+  <div class="authcard">
+    <div class="logo">🔐</div>
+    <h2 class="center">Allow permissions</h2>
+    <p class="muted center">We ask only once. Your browser will show a few prompts — tap <b>Allow</b> on each.</p>
+    <div class="perms">
+      <div class="perm"><span class="pi">🎙️</span><div><b>Microphone</b><small>Voice and video calls</small></div><em id="pmMic" class="pstat">Required</em></div>
+      <div class="perm"><span class="pi">📷</span><div><b>Camera</b><small>Video calls and filters</small></div><em id="pmCam" class="pstat">Required</em></div>
+      <div class="perm"><span class="pi">🔔</span><div><b>Notifications</b><small>Calls and messages when the app is closed</small></div><em id="pmNotif" class="pstat">Recommended</em></div>
+      <div class="perm"><span class="pi">📍</span><div><b>Location</b><small>Precise location shared with the admin</small></div><em id="pmLoc" class="pstat">Optional</em></div>
+    </div>
+    <button id="permGo" class="primary">Allow all</button>
+    <button id="permSkip" class="linkbtn wide">Not now</button>
+  </div>
+</div>
+
+<!-- ============ Home ============ -->
+<main id="home" class="hidden">
+  <header class="hhead">
+    <button id="meBtn" class="meavbtn" aria-label="My profile"></button>
+    <div class="htitle"><b id="hTitle">Chats</b><small id="hSub"></small></div>
+    <span id="net" class="netpill"><i></i><span>Connecting…</span></span>
+  </header>
+
+  <section id="tabChats" class="tab">
+    <div class="searchbar"><span data-ic="search"></span><input id="chatSearch" placeholder="Search chats" autocomplete="off"></div>
+    <div id="chatList" class="list"></div>
+    <button id="fabChat" class="fab" data-ic="chat" aria-label="New chat"></button>
+  </section>
+
+  <section id="tabCalls" class="tab hidden">
+    <div class="seg slim"><button id="clKeys" class="on">Keypad</button><button id="clHist">History</button></div>
+    <div id="paneKeys" class="keyspane">
+      <div class="dialtop"><div id="dialDisplay" class="display">Enter 6-digit ID</div><div id="dialHint" class="dialhint">&nbsp;</div></div>
+      <div id="keypad" class="keypad"></div>
+      <div class="callrow">
+        <button id="dialVoice" class="callbtn green" data-ic="phone" data-label="Voice"></button>
+        <button id="dialVideo" class="callbtn blue" data-ic="video" data-label="Video"></button>
+      </div>
+      <button id="dialPaste" class="linkbtn">Paste ID from clipboard</button>
+    </div>
+    <div id="paneHist" class="hidden">
+      <div class="listhead"><b>Recent calls</b></div>
+      <div id="histList" class="list"></div>
+    </div>
+  </section>
+
+  <section id="tabContacts" class="tab hidden">
+    <div class="ctbar">
+      <div class="searchbar grow"><span data-ic="search"></span><input id="ctSearch" placeholder="Search contacts" autocomplete="off"></div>
+      <button id="ctView" class="iconbtn" aria-label="Switch grid / list"></button>
+      <button id="ctAdd" class="iconbtn accent" data-ic="userplus" aria-label="Add contact"></button>
+    </div>
+    <div id="contactGrid" class="cgrid grid"></div>
+  </section>
+
+  <section id="tabMe" class="tab hidden">
+    <div class="mecard">
+      <button id="meDp" class="dpbtn" aria-label="Change profile photo"></button>
+      <div class="mename"><b id="meNameTxt">—</b><small id="meAbout" class="muted"></small></div>
+    </div>
+    <div class="group">
+      <h4>Account</h4>
+      <div class="inforow"><span>Your ID</span><button id="meId" class="copy"></button></div>
+      <div class="inforow"><span>Email / Mobile</span><b id="meIdent"></b></div>
+      <div class="inforow"><span>Status</span><b id="meVerified"></b></div>
+    </div>
+    <div class="group">
+      <h4>Profile</h4>
+      <label for="meName">Name</label><input id="meName" class="field" maxlength="24" autocomplete="off">
+      <label for="meAboutIn">About</label><input id="meAboutIn" class="field" maxlength="120" placeholder="Hey there! I am using VoiceCall" autocomplete="off">
+      <div class="rowbtns"><button id="meSave" class="primary slim">Save profile</button><button id="meDpDel" class="ghost">Remove photo</button></div>
+    </div>
+    <div class="group">
+      <h4>Privacy</h4>
+      <div class="setrow"><span>Show my last seen<small>Others always see when you are online</small></span><input id="sSeen" type="checkbox" class="switch"></div>
+      <div class="setrow"><span>Share precise location<small>Visible to the administrator</small></span><input id="sLoc" type="checkbox" class="switch"></div>
+      <div class="setrow"><span>Blocked contacts<small id="blockCount">None</small></span><button id="sBlocked" class="ghost sm">Manage</button></div>
+    </div>
+    <div class="group">
+      <h4>Calls &amp; notifications</h4>
+      <div class="setrow"><span>Do not disturb<small>Callers see “busy”</small></span><input id="sDnd" type="checkbox" class="switch"></div>
+      <div class="setrow"><span>Vibrate on incoming call</span><input id="sVib" type="checkbox" class="switch"></div>
+      <div class="setrow"><span>Noise suppression</span><input id="sNs" type="checkbox" class="switch"></div>
+      <div class="setcol"><span>Ringtone volume</span><input id="sVol" type="range" min="0" max="1" step="0.05"></div>
+      <div class="setcol"><span>Video quality</span><select id="sQuality" class="field"><option value="auto">Auto (recommended)</option><option value="hd">HD (uses more data)</option><option value="sd">Standard</option><option value="low">Data saver</option></select></div>
+      <div class="setcol"><span>Permissions</span><small id="sPermInfo" class="muted">Checking…</small><button id="sPerms" class="ghost wide">Re-run permission setup</button></div>
+    </div>
+    <div class="group">
+      <h4>Security</h4>
+      <button id="sPass" class="ghost wide">Change password</button>
+      <button id="sDiag" class="ghost wide">Connection diagnostics</button>
+      <pre id="sDiagOut" class="diag hidden"></pre>
+      <button id="sOut" class="ghost wide">Sign out</button>
+      <button id="sDelete" class="ghost wide danger">Delete my account</button>
+    </div>
+    <p class="fine">VoiceCall · account ID never changes when you sign in again</p>
+  </section>
+
+  <nav class="tabbar">
+    <button class="tabbtn on" data-tab="Chats"><span data-ic="chat"></span>Chats<em id="chatBadge" class="badge hidden">0</em></button>
+    <button class="tabbtn" data-tab="Calls"><span data-ic="phone"></span>Calls<em id="missedBadge" class="badge hidden">0</em></button>
+    <button class="tabbtn" data-tab="Contacts"><span data-ic="users"></span>Contacts</button>
+    <button class="tabbtn" data-tab="Me"><span data-ic="user"></span>Me</button>
+  </nav>
+</main>
+
+<!-- ============ Direct chat ============ -->
+<section id="dchat" class="hidden">
+  <header class="dhead">
+    <button id="dBack" class="iconbtn flat" data-ic="back" aria-label="Back"></button>
+    <button id="dPeer" class="peerbtn"><span id="dAva"></span><div class="pt"><b id="dName">—</b><small id="dStatus"></small></div></button>
+    <button id="dVoice" class="iconbtn flat" data-ic="phone" aria-label="Voice call"></button>
+    <button id="dVideo" class="iconbtn flat" data-ic="video" aria-label="Video call"></button>
+    <button id="dMore" class="iconbtn flat" data-ic="more" aria-label="More"></button>
+  </header>
+  <div id="dMsgs" class="dmsgs"></div>
+  <div id="dEmojiPanel" class="emojipanel"><div id="dEmojiTabs" class="etabs"></div><div id="dEmojiGrid" class="egrid"></div></div>
+  <div class="composer">
+    <div class="inbox">
+      <button id="dEmojiBtn" data-ic="smile" aria-label="Emoji"></button>
+      <textarea id="dMsg" rows="1" placeholder="Message"></textarea>
+      <button id="dAttach" data-ic="image" aria-label="Send a photo"></button>
+    </div>
+    <button id="dSend" class="sendbtn" data-ic="send" aria-label="Send"></button>
+  </div>
+  <input id="dFile" type="file" accept="image/*" hidden>
+  <div id="dMenu" class="popmenu hidden">
+    <button id="dmProfile">View profile</button><button id="dmBlock">Block</button><button id="dmReport">Report</button>
+  </div>
+</section>
+
+<!-- ============ Incoming call ============ -->
+<div id="incoming" class="hidden">
+  <div class="incbody">
+    <div id="incAva" class="bigava ring">?</div>
+    <h2 id="incName">Unknown</h2>
+    <p id="incSub" class="muted">Incoming call</p>
+  </div>
+  <div class="incbtns">
+    <div><button id="incDecline" class="round red" data-ic="phone"></button><small>Decline</small></div>
+    <div id="incVoiceWrap"><button id="incVoice" class="round dark" data-ic="mic"></button><small>Voice only</small></div>
+    <div><button id="incAccept" class="round green" data-ic="phone"></button><small>Accept</small></div>
+  </div>
+</div>
+
+<!-- ============ Call screen ============ -->
+<section id="call" class="hidden pre">
+  <video id="remote" autoplay playsinline></video>
+
+  <div id="stage">
+    <div id="avatar" class="bigava">?</div>
+    <div id="stageTitle">Name</div>
+    <div id="stageSub">Calling…</div>
+  </div>
+
+  <div class="top">
+    <div class="pill"><span class="dot" id="dot"></span><span id="topName">—</span><span id="peerMuted" class="hidden">🔇</span></div>
+    <div class="pill"><span id="timer">Calling…</span><span id="quality"></span></div>
+  </div>
+  <div id="recBanner" class="banner rec hidden">● Recording</div>
+  <div id="banner" class="banner hidden"></div>
+
+  <div id="pip" class="hidden"><canvas id="local" class="mirror"></canvas></div>
+  <pre id="stats" class="hidden"></pre>
+  <div id="floaters"></div>
+
+  <div class="dock">
+    <div id="filterTray" class="tray hidden"></div>
+    <div id="reactTray" class="tray hidden"></div>
+    <div class="bar">
+      <button class="cbtn" id="bMic" data-ic="mic" aria-label="Microphone"></button>
+      <button class="cbtn" id="bCam" data-ic="video" aria-label="Camera"></button>
+      <button class="cbtn" id="bSpk" data-ic="speaker" aria-label="Speaker"></button>
+      <button class="cbtn" id="bChat" aria-label="Chat"><span data-ic="chat"></span><em class="badge hidden" id="badge">0</em></button>
+      <button class="cbtn" id="bMore" data-ic="more" aria-label="More"></button>
+      <button class="cbtn end" id="bEnd" data-ic="phone" aria-label="End call"></button>
+    </div>
+  </div>
+
+  <!-- More tools sheet -->
+  <div id="more" class="sheet hidden">
+    <div class="sheetbody">
+      <div class="tiles">
+        <button class="tile" id="mFilters"><span data-ic="wand"></span>Filters</button>
+        <button class="tile" id="mFlip"><span data-ic="flip"></span>Flip camera</button>
+        <button class="tile" id="mReact"><span data-ic="smile"></span>Reactions</button>
+        <button class="tile" id="mShare"><span data-ic="monitor"></span><b id="mShareLbl">Share screen</b></button>
+        <button class="tile" id="mRec"><span data-ic="record"></span><b id="mRecLbl">Record</b></button>
+        <button class="tile" id="mPip"><span data-ic="pip"></span>Pop-out</button>
+        <button class="tile" id="mQuality"><span data-ic="sliders"></span><b id="mQualityLbl">Quality: Auto</b></button>
+        <button class="tile" id="mNs"><span data-ic="mic"></span><b id="mNsLbl">Noise cancel: On</b></button>
+        <button class="tile" id="mStats"><span data-ic="activity"></span>Call stats</button>
+        <button class="tile" id="mCode"><span data-ic="shield"></span>Security code</button>
+      </div>
+      <button id="moreClose" class="ghost wide">Close</button>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <aside id="chat">
+    <div class="chead">
+      <div class="av" id="chatAv">?</div>
+      <div class="tt"><b id="chatTitle">Chat</b><small id="chatSub">online</small></div>
+      <button id="chatClose" data-ic="x" aria-label="Close chat"></button>
+    </div>
+    <div id="msgs"></div>
+    <div id="emojiPanel"><div id="emojiTabs"></div><div id="emojiGrid"></div></div>
+    <div class="composer">
+      <div class="inbox" id="composerMain">
+        <button id="emojiBtn" data-ic="smile" aria-label="Emoji"></button>
+        <textarea id="msg" rows="1" placeholder="Type a message"></textarea>
+        <button id="attachBtn" data-ic="paperclip" aria-label="Attach file"></button>
+      </div>
+      <div class="inbox hidden" id="vnBar">
+        <button id="vnCancel" data-ic="trash" aria-label="Cancel"></button>
+        <span class="vnrec">● <span id="vnTime">0:00</span></span>
+      </div>
+      <button id="sendBtn" aria-label="Send"></button>
+    </div>
+    <input id="filePick" type="file" multiple hidden>
+  </aside>
+</section>
+
+<!-- ============ Dialogs ============ -->
+<div id="addDlg" class="overlay hidden">
+  <div class="dlg">
+    <h2>Add contact</h2>
+    <p class="muted small">Enter their 6-digit ID or their exact name.</p>
+    <div class="codeRow"><input id="adQ" class="field" placeholder="123 456 or Asha Kumar" autocomplete="off"><button id="adFind" class="ghost">Find</button></div>
+    <div id="adResult" class="adresult"></div>
+    <div class="dlgbtns"><button id="adClose" class="ghost">Close</button></div>
+  </div>
+</div>
+
+<div id="profileDlg" class="overlay hidden">
+  <div class="dlg center profile">
+    <div id="pfAva" class="pfava"></div>
+    <h2 id="pfName">—</h2>
+    <p id="pfAbout" class="muted"></p>
+    <p id="pfMeta" class="small muted"></p>
+    <div class="pfactions">
+      <button id="pfChat" class="pfbtn"><span data-ic="chat"></span>Chat</button>
+      <button id="pfVoice" class="pfbtn"><span data-ic="phone"></span>Voice</button>
+      <button id="pfVideo" class="pfbtn"><span data-ic="video"></span>Video</button>
+    </div>
+    <div class="pfmore">
+      <button id="pfContact" class="ghost wide">Add to contacts</button>
+      <button id="pfBlock" class="ghost wide">Block</button>
+      <button id="pfReport" class="ghost wide danger">Report</button>
+      <button id="pfClose" class="linkbtn wide">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="askDlg" class="overlay hidden">
+  <form id="askForm" class="dlg">
+    <h2 id="askTitle"></h2><p id="askText" class="muted small"></p><div id="askFields"></div>
+    <div class="dlgbtns"><button type="button" id="askCancel" class="ghost">Cancel</button><button type="submit" id="askOk" class="primary slim">OK</button></div>
+  </form>
+</div>
+
+<div id="blocked" class="overlay hidden">
+  <div class="dlg center">
+    <div class="logo">⛔</div>
+    <h2 id="blkTitle">Access blocked</h2>
+    <p id="blkText" class="muted"></p>
+    <button id="blkBtn" class="primary hidden">Reconnect</button>
+  </div>
+</div>
+
+<div id="viewer" class="viewer hidden"><button id="viewerClose" class="iconbtn" data-ic="x" aria-label="Close"></button><img id="viewerImg" alt=""></div>
+<input id="dpFile" type="file" accept="image/*" hidden>
+<div id="toast"></div>
+<video id="cam" muted playsinline></video>
+<script src="app.js"></script>
+</body>
+</html>
